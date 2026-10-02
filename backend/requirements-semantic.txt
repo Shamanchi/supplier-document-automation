@@ -1,0 +1,14 @@
+# Смысловая ступень подбора: локальная модель из архитектуры
+# (paraphrase-multilingual-mpnet-base-v2, 768 измерений).
+#
+# Вынесено из основного requirements.txt намеренно: torch и веса добавляют к
+# образу около двух гигабайт, а подбор без них работает — просто без смысловой
+# ступени. Ставится там, где она включена переменной SEMANTIC_PROVIDER.
+#
+#   pip install -r requirements.txt -r requirements-semantic.txt
+#   python -c "from sentence_transformers import SentenceTransformer as M; \
+#              M('sentence-transformers/paraphrase-multilingual-mpnet-base-v2')"
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
+numpy>=1.26
+sentence-transformers>=3.0

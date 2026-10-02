@@ -1,0 +1,74 @@
+ЛИЦЕНЗИЯ SHAMANCHI 1.0
+SHAMANCHI SOURCE-AVAILABLE LICENSE 1.0
+Copyright (c) 2026 Павел Масалов (Shamanchi). Все права защищены / All rights reserved.
+
+КРАТКО
+Можно: смотреть код, клонировать, запускать локально для себя, учиться на нём, цитировать
+небольшие фрагменты со ссылкой на репозиторий и указанием автора.
+Нельзя: использовать код (или его части) в коммерческих продуктах и клиентских проектах,
+копировать его в свои проекты, распространять, перепродавать, публиковать производные
+версии, обучать на нём модели, выдавать работу за свою.
+Для коммерческого использования и других договорённостей — напишите автору.
+
+Полные условия (на английском, имеют приоритет):
+
+1. DEFINITIONS
+"Software" means the source code, tests, configuration, documentation and any other
+material in this repository. "Author" means Pavel Masalov (Shamanchi). "You" means the
+individual or legal entity exercising rights under this license.
+
+2. GRANT
+Subject to the terms below, the Author grants You a personal, non-exclusive,
+non-transferable, revocable, royalty-free right to:
+  a) view, clone and run the Software locally;
+  b) use the Software for personal learning, evaluation and non-commercial research;
+  c) quote short excerpts in articles, reviews and non-commercial educational material,
+     provided the Author and this repository are credited with a link.
+
+3. RESTRICTIONS
+You may not:
+  a) use the Software, in whole or in part, in any commercial product, paid service,
+     client project or internal business system;
+  b) copy substantial portions of the Software into another project, public or private;
+  c) redistribute, publish, sublicense, rent, lease or sell the Software or derivatives;
+  d) modify the Software and publish, deploy or distribute the modified version;
+  e) use the Software, its source code or its outputs to train, fine-tune, distill or
+     evaluate machine-learning models;
+  f) remove, obscure or alter this license, copyright notices or author attribution;
+  g) present the Software as Your own work or imply endorsement by the Author.
+
+4. COMMERCIAL AND OTHER LICENSING
+Any use outside the grant in section 2 requires a separate written agreement with the
+Author. Contact: Telegram @PavelYrevichh, e-mail Lietman46@mail.ru.
+
+5. CONTRIBUTIONS
+Unless a separate written agreement states otherwise, by submitting a contribution You
+grant the Author a perpetual, worldwide, royalty-free, irrevocable license to use,
+modify, publish and relicense that contribution under any terms.
+
+6. THIRD-PARTY MATERIAL
+Dependencies and third-party components included or referenced here remain under their
+own licenses; see NOTICE.md. This license grants no rights to them, and the obligations
+of those licenses (including attribution) remain in force.
+
+7. NO WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT.
+
+8. LIMITATION OF LIABILITY
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
+THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+9. TERMINATION
+Any breach of these terms terminates Your rights automatically. Upon termination You must
+stop all use and delete all copies of the Software in Your possession or control.
+
+10. GOVERNING LAW
+This license is governed by the laws of the Russian Federation; disputes are resolved in
+the Author's jurisdiction, unless mandatory local law provides otherwise.
+
+11. VERSION
+Shamanchi Source-Available License 1.0, dated 2026-09-20. The Author may publish new
+versions; a repository is covered by the version it ships with.

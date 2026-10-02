@@ -1,0 +1,54 @@
+.app-nav-link {
+  display: inline-flex;
+  border-radius: 6px;
+}
+
+.app-nav-link.is-active {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 28%);
+}
+
+.app-nav-link.is-active .ant-btn {
+  color: #16324f !important;
+  border-color: #fff !important;
+  font-weight: 700;
+}
+
+.app-nav-link:focus-visible {
+  outline: 3px solid #f5c451;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    height: auto;
+    min-height: 64px;
+    padding: 10px 12px !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px;
+    line-height: normal;
+  }
+
+  .app-title {
+    flex: none !important;
+    font-size: 17px !important;
+  }
+
+  .app-nav {
+    row-gap: 8px !important;
+  }
+
+  .app-nav > .ant-typography {
+    display: none;
+  }
+
+  .app-content {
+    padding: 8px !important;
+  }
+
+  .app-shell {
+    padding: 16px !important;
+    min-height: calc(100vh - 128px) !important;
+  }
+}

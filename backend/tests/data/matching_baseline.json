@@ -1,0 +1,50 @@
+{
+  "embedder": "trigram-hash:v1/v1",
+  "semantic": "",
+  "cases": 76,
+  "catalog_positions": 2473,
+  "canonicals": 1834,
+  "setup_seconds": 1.9,
+  "thresholds": {
+    "auto": 0.85,
+    "review": 0.6
+  },
+  "answerable": {
+    "cases": 60,
+    "top1_hit": 57,
+    "top3_hit": 59,
+    "top1_accuracy": 0.95,
+    "top3_recall": 0.983,
+    "not_found": 1,
+    "forbidden_top1": 0
+  },
+  "auto_decisions": {
+    "cases": 51,
+    "correct": 51,
+    "precision": 1.0
+  },
+  "needs_clarification": {
+    "cases": 1,
+    "clarify_or_review": 1,
+    "not_found": 0,
+    "auto": 0
+  },
+  "absent_from_catalog": {
+    "cases": 15,
+    "not_found": 15,
+    "auto": 0,
+    "review_or_clarify": 0
+  },
+  "decisions": {
+    "auto": 51,
+    "not_found": 16,
+    "review": 7,
+    "clarify": 2
+  },
+  "stages": {
+    "vector": 50,
+    "none": 16,
+    "designation": 5,
+    "fuzzy": 5
+  }
+}

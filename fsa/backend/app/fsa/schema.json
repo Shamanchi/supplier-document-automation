@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "enums": {
+    "CertificateStatus": [
+      "Действует",
+      "Архивный",
+      "Прекращен",
+      "Приостановлен",
+      "Возобновлен",
+      "Продлен",
+      "Недействителен",
+      "Неизвестен"
+    ],
+    "DocumentClass": [
+      "certificate",
+      "declaration",
+      "registry_extract",
+      "passport",
+      "other"
+    ],
+    "TextSource": [
+      "text_layer",
+      "ocr",
+      "hybrid"
+    ],
+    "Verdict": [
+      "valid",
+      "expired",
+      "suspended",
+      "terminated",
+      "not_found",
+      "unknown"
+    ],
+    "MatchedBy": [
+      "registration_number",
+      "blank_number",
+      "manufacturer_and_product",
+      "none"
+    ]
+  },
+  "models": {
+    "RegistryCertificate": {
+      "doc": "Запись реестра, приведённая к каноническим именам.",
+      "fields": {
+        "registration_number": "str",
+        "registration_number_key": "str",
+        "status": "CertificateStatus",
+        "status_raw": "str",
+        "registered_at": "date",
+        "valid_until": "date",
+        "suspended_at": "date",
+        "suspension_until": "date",
+        "terminated_at": "date",
+        "resumed_at": "date",
+        "extended_at": "date",
+        "object_type": "str",
+        "blank_number": "str",
+        "annex_blank_number": "str",
+        "technical_regulations": "str",
+        "product_group": "str",
+        "applicant_name": "str",
+        "applicant_inn": "str",
+        "manufacturer_name": "str",
+        "manufacturer_inn": "str",
+        "manufacturer_ogrn": "str",
+        "product_full_name": "str",
+        "product_designation": "str",
+        "product_type": "str",
+        "product_brand": "str",
+        "product_model": "str",
+        "product_article": "str",
+        "okpd2_tnved": "str",
+        "product_standards": "str",
+        "source_slice": "str"
+      }
+    },
+    "ExtractedDocument": {
+      "doc": "Результат разбора документа: текстовый слой или OCR.",
+      "fields": {
+        "doc_id": "str",
+        "doc_class": "DocumentClass",
+        "text_source": "TextSource",
+        "source_path": "str",
+        "engine": "str",
+        "page_count": "int",
+        "mean_confidence": "float",
+        "registration_number": "str",
+        "blank_number": "str",
+        "valid_from": "date",
+        "valid_until": "date",
+        "products_raw": "str",
+        "product_designations": "list[str]",
+        "technical_regulation": "str",
+        "tu_reference": "str",
+        "annex_reference": "str",
+        "manufacturer_name": "str",
+        "product_designation": "str",
+        "product_name": "str",
+        "mass_kg": "float",
+        "dimensions_mm": "str",
+        "service_life": "str",
+        "warranty_period": "str",
+        "certificate_numbers": "list[str]",
+        "warnings": "list[str]"
+      }
+    },
+    "SuccessorCandidate": {
+      "doc": "Вероятная замена мёртвого сертификата.",
+      "fields": {
+        "certificate": "RegistryCertificate",
+        "score": "float",
+        "reason": "str"
+      }
+    },
+    "Reconciliation": {
+      "doc": "Итог сверки документа с реестром.",
+      "fields": {
+        "verdict": "Verdict",
+        "matched_by": "MatchedBy",
+        "checked_on": "date",
+        "schema_version": "str",
+        "document": "ExtractedDocument",
+        "certificate": "RegistryCertificate",
+        "successors": "list[SuccessorCandidate]",
+        "needs_manual_review": "bool",
+        "review_reasons": "list[str]"
+      }
+    },
+    "PositionDocumentLink": {
+      "doc": "То, что забирает price_loader_app для колонки «ссылка на документацию».",
+      "fields": {
+        "position_ref": "str",
+        "doc_id": "str",
+        "document_url": "str",
+        "verdict": "Verdict",
+        "valid_until": "date",
+        "registration_number": "str",
+        "needs_manual_review": "bool",
+        "review_reasons": "list[str]",
+        "successor_registration_number": "str",
+        "successor_valid_until": "date"
+      }
+    }
+  }
+}

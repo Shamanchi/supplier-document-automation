@@ -1,0 +1,66 @@
+.matrix-preview-loading {
+  display: grid;
+  min-height: 260px;
+  place-items: center;
+}
+
+.matrix-preview-grid-wrap {
+  max-height: 430px;
+  overflow: auto;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.matrix-preview-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.matrix-preview-grid th,
+.matrix-preview-grid td {
+  min-width: 88px;
+  max-width: 260px;
+  padding: 6px 8px;
+  overflow: hidden;
+  border-right: 1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matrix-preview-grid thead th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: #f3f6f9;
+  text-align: center;
+}
+
+.matrix-preview-grid tbody th,
+.matrix-preview-grid-corner {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+  min-width: 54px;
+  background: #f3f6f9;
+  text-align: right;
+}
+
+.matrix-preview-grid .matrix-preview-corner {
+  z-index: 3;
+}
+
+.matrix-preview-grid td.is-parsed {
+  background: #e9f8ef;
+  box-shadow: inset 0 0 0 1px #75c98c;
+  font-weight: 600;
+}
+
+.matrix-preview-grid td.is-merged {
+  color: #91a0af;
+  text-align: center;
+}

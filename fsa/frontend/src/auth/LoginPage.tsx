@@ -1,0 +1,7 @@
+import { useState } from 'react'
+import { Alert, Button, Card, Form, Input, Layout, Typography } from 'antd'
+import { useAuth } from './AuthContext'
+export default function LoginPage() {
+  const { login } = useAuth(); const [error, setError] = useState<string | null>(null); const [submitting, setSubmitting] = useState(false)
+  return <Layout style={{ minHeight: '100vh', background: '#16324F' }}><Layout.Content style={{ display: 'grid', placeItems: 'center', padding: 24 }}><Card style={{ width: 420 }}><Typography.Title level={4} style={{ marginTop: 0 }}>DocPrice · Сертификаты</Typography.Title><Typography.Paragraph type="secondary">Войдите с общей учётной записью DocPrice.</Typography.Paragraph>{error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}<Form layout="vertical" onFinish={async ({ email, password }: { email: string; password: string }) => { setError(null); setSubmitting(true); try { await login(email.trim(), password) } catch { setError('Неверный логин или пароль') } finally { setSubmitting(false) } }}><Form.Item name="email" label="Логин" rules={[{ required: true, message: 'Введите логин' }]}><Input autoFocus type="email" autoComplete="email" /></Form.Item><Form.Item name="password" label="Пароль" rules={[{ required: true, message: 'Введите пароль' }]}><Input.Password autoComplete="current-password" /></Form.Item><Button type="primary" htmlType="submit" block loading={submitting}>Войти</Button></Form></Card></Layout.Content></Layout>
+}

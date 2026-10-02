@@ -1,0 +1,177 @@
+services:
+  price-db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: '${POSTGRES_USER:-price}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-price}'
+      POSTGRES_DB: '${POSTGRES_DB:-price_loader}'
+    ports: ['55433:5432']
+    volumes: [price-db:/var/lib/postgresql/data]
+    healthcheck: {test: [CMD-SHELL, 'pg_isready -U $${POSTGRES_USER:-price} -d $${POSTGRES_DB:-price_loader}'], interval: 5s, timeout: 3s, retries: 20}
+  # Тестовая БД контрактных PG-тестов (backend/tests/conftest.py, TEST_DATABASE_URL).
+  # Отдельный инстанс, а не вторая база внутри price-db: фикстура clean_users
+  # выполняет `TRUNCATE users, check_batches ... CASCADE`, и у прогона не должно
+  # быть технической возможности дотянуться до стенда. Профиль test — в обычном
+  # `docker compose up` сервис не поднимается.
+  price-db-test:
+    image: pgvector/pgvector:pg16
+    profiles: ['test']
+    # Долговечность коммита тестовой БД не нужна: без `synchronous_commit=off`
+    # fsync на каждый коммит даёт ~1.6 с на транзакцию (замер 17.09.2026), и
+    # прогон контрактных тестов растягивается на часы.
+    command: ['postgres', '-c', 'synchronous_commit=off']
+    environment:
+      POSTGRES_USER: '${POSTGRES_USER:-price}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-price}'
+      POSTGRES_DB: '${POSTGRES_DB:-price_loader}_test'
+    ports: ['55434:5432']
+    volumes: [price-db-test:/var/lib/postgresql/data]
+    healthcheck: {test: [CMD-SHELL, 'pg_isready -U $${POSTGRES_USER:-price} -d $${POSTGRES_DB:-price_loader}_test'], interval: 5s, timeout: 3s, retries: 20}
+  fsa-db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: fsa, POSTGRES_PASSWORD: fsa, POSTGRES_DB: fsa}
+    volumes: [fsa-db:/var/lib/postgresql/data]
+    healthcheck: {test: [CMD-SHELL, 'pg_isready -U fsa -d fsa'], interval: 5s, timeout: 3s, retries: 20}
+  redis:
+    image: redis:7-alpine
+    healthcheck: {test: [CMD, redis-cli, ping], interval: 5s, timeout: 3s, retries: 20}
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ':9001'
+    # Порты нужны наружу: прогон контрактных тестов идёт с хоста, а приложение
+    # отдаёт presigned-ссылки на MINIO_PUBLIC_ENDPOINT=localhost:9000, которые
+    # открывает браузер. Привязка к loopback — чтобы бакеты с документами не
+    # оказались доступны в локальной сети (учётки MinIO здесь дефолтные).
+    ports: ['127.0.0.1:9000:9000', '127.0.0.1:9001:9001']
+    environment:
+      MINIO_ROOT_USER: '${MINIO_ROOT_USER:-minioadmin}'
+      MINIO_ROOT_PASSWORD: '${MINIO_ROOT_PASSWORD:-minioadmin}'
+    volumes: [minio-data:/data]
+    healthcheck: {test: [CMD, mc, ready, local], interval: 5s, timeout: 3s, retries: 20}
+  # Шаг миграции 04: бакеты ордерного домена фазы 3 (documents/quarantine) —
+  # как minio-init compose фазы 3; price-files/product-docs создаёт
+  # price-api в startup (app/storage.ensure_buckets).
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    depends_on: {minio: {condition: service_healthy}}
+    environment:
+      MINIO_ROOT_USER: '${MINIO_ROOT_USER:-minioadmin}'
+      MINIO_ROOT_PASSWORD: '${MINIO_ROOT_PASSWORD:-minioadmin}'
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+        mc mb --ignore-existing local/documents &&
+        mc mb --ignore-existing local/quarantine
+      "
+  price-api:
+    build: ./backend
+    env_file: [.env]
+    environment:
+      DATABASE_URL: 'postgresql+asyncpg://${POSTGRES_USER:-price}:${POSTGRES_PASSWORD:-price}@price-db:5432/${POSTGRES_DB:-price_loader}'
+      REDIS_URL: 'redis://redis:6379/0'
+      MINIO_ENDPOINT: 'minio:9000'
+      # Шаг миграции 04: Bitrix + OCR ордерного домена (docs/migration/04-backend-bitrix.md).
+      # Стартуем в fake-режиме (сделка 12345 без сети); перевод в webhook —
+      # отдельная операция после приёмки, портал не трогаем.
+      BITRIX_MODE: '${BITRIX_MODE:-fake}'
+      BITRIX_BASE_URL: '${BITRIX_BASE_URL:-}'
+      BITRIX_WEBHOOK_TOKEN: '${BITRIX_WEBHOOK_TOKEN:-}'
+      BITRIX_TENDER_FIELD: '${BITRIX_TENDER_FIELD:-UF_CRM_TENDER_ID}'
+      BITRIX_FILE_FIELDS: '${BITRIX_FILE_FIELDS:-[]}'
+      BITRIX_READ_TIMELINE_FILES: '${BITRIX_READ_TIMELINE_FILES:-true}'
+      BITRIX_DEAL_FOLDER_FIELD: '${BITRIX_DEAL_FOLDER_FIELD:-}'
+      BITRIX_REPORT_FOLDER_ID: '${BITRIX_REPORT_FOLDER_ID:-}'
+      BITRIX_TIMEOUT_SECONDS: '${BITRIX_TIMEOUT_SECONDS:-20}'
+      BITRIX_DOWNLOAD_TIMEOUT_SECONDS: '${BITRIX_DOWNLOAD_TIMEOUT_SECONDS:-180}'
+      BITRIX_MAX_ATTEMPTS: '${BITRIX_MAX_ATTEMPTS:-5}'
+      BITRIX_RETRY_BASE_SECONDS: '${BITRIX_RETRY_BASE_SECONDS:-5}'
+      BITRIX_RETRY_MAX_SECONDS: '${BITRIX_RETRY_MAX_SECONDS:-900}'
+      OCR_ENABLED: '${OCR_ENABLED:-true}'
+      OCR_LANGUAGE: '${OCR_LANGUAGE:-rus+eng}'
+      OCR_DPI: '${OCR_DPI:-200}'
+      OCR_TIMEOUT_SECONDS: '${OCR_TIMEOUT_SECONDS:-60}'
+      OCR_MIN_CONFIDENCE: '${OCR_MIN_CONFIDENCE:-0.55}'
+      EXTRACTION_MIN_CONFIDENCE: '${EXTRACTION_MIN_CONFIDENCE:-0.60}'
+    ports: ['8801:8000']
+    depends_on: {price-db: {condition: service_healthy}, redis: {condition: service_healthy}, minio: {condition: service_healthy}}
+    healthcheck: {test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"], interval: 10s, timeout: 5s, retries: 20}
+  price-worker:
+    build: ./backend
+    command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=2
+    env_file: [.env]
+    environment:
+      DATABASE_URL: 'postgresql+asyncpg://${POSTGRES_USER:-price}:${POSTGRES_PASSWORD:-price}@price-db:5432/${POSTGRES_DB:-price_loader}'
+      REDIS_URL: 'redis://redis:6379/0'
+      MINIO_ENDPOINT: 'minio:9000'
+      # Шаг миграции 04: тот же блок интеграции, что у price-api.
+      BITRIX_MODE: '${BITRIX_MODE:-fake}'
+      BITRIX_BASE_URL: '${BITRIX_BASE_URL:-}'
+      BITRIX_WEBHOOK_TOKEN: '${BITRIX_WEBHOOK_TOKEN:-}'
+      BITRIX_TENDER_FIELD: '${BITRIX_TENDER_FIELD:-UF_CRM_TENDER_ID}'
+      BITRIX_FILE_FIELDS: '${BITRIX_FILE_FIELDS:-[]}'
+      BITRIX_READ_TIMELINE_FILES: '${BITRIX_READ_TIMELINE_FILES:-true}'
+      BITRIX_DEAL_FOLDER_FIELD: '${BITRIX_DEAL_FOLDER_FIELD:-}'
+      BITRIX_REPORT_FOLDER_ID: '${BITRIX_REPORT_FOLDER_ID:-}'
+      BITRIX_TIMEOUT_SECONDS: '${BITRIX_TIMEOUT_SECONDS:-20}'
+      BITRIX_DOWNLOAD_TIMEOUT_SECONDS: '${BITRIX_DOWNLOAD_TIMEOUT_SECONDS:-180}'
+      BITRIX_MAX_ATTEMPTS: '${BITRIX_MAX_ATTEMPTS:-5}'
+      BITRIX_RETRY_BASE_SECONDS: '${BITRIX_RETRY_BASE_SECONDS:-5}'
+      BITRIX_RETRY_MAX_SECONDS: '${BITRIX_RETRY_MAX_SECONDS:-900}'
+      OCR_ENABLED: '${OCR_ENABLED:-true}'
+      OCR_LANGUAGE: '${OCR_LANGUAGE:-rus+eng}'
+      OCR_DPI: '${OCR_DPI:-200}'
+      OCR_TIMEOUT_SECONDS: '${OCR_TIMEOUT_SECONDS:-60}'
+      OCR_MIN_CONFIDENCE: '${OCR_MIN_CONFIDENCE:-0.55}'
+      EXTRACTION_MIN_CONFIDENCE: '${EXTRACTION_MIN_CONFIDENCE:-0.60}'
+    depends_on: {price-api: {condition: service_healthy}}
+  # Планировщик держится отдельным сервисом, а не флагом --beat у воркера:
+  # иначе каждый экземпляр воркера завёл бы своё расписание и периодические
+  # задачи дублировались бы при масштабировании.
+  price-beat:
+    build: ./backend
+    command: celery -A app.worker.celery_app beat --loglevel=info
+    env_file: [.env]
+    environment:
+      DATABASE_URL: 'postgresql+asyncpg://${POSTGRES_USER:-price}:${POSTGRES_PASSWORD:-price}@price-db:5432/${POSTGRES_DB:-price_loader}'
+      REDIS_URL: 'redis://redis:6379/0'
+      MINIO_ENDPOINT: 'minio:9000'
+      BITRIX_MODE: '${BITRIX_MODE:-fake}'
+      OCR_ENABLED: '${OCR_ENABLED:-true}'
+    depends_on: {price-api: {condition: service_healthy}}
+  fsa-api:
+    build: ./fsa/backend
+    env_file: [.env]
+    environment:
+      DATABASE_URL: 'postgresql+asyncpg://fsa:fsa@fsa-db:5432/fsa'
+      REDIS_URL: 'redis://redis:6379/1'
+      MINIO_ENDPOINT: 'minio:9000'
+      PHASE3_AUTH_SECRET: '${PHASE3_AUTH_SECRET:?set PHASE3_AUTH_SECRET}'
+    ports: ['8803:8100']
+    depends_on: {fsa-db: {condition: service_healthy}, redis: {condition: service_healthy}, minio: {condition: service_healthy}}
+    healthcheck: {test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health')"], interval: 10s, timeout: 5s, retries: 20}
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    environment: {BACKEND_UPSTREAM: price-api:8000}
+    ports: ['8880:80']
+    depends_on: {price-api: {condition: service_healthy}}
+    healthcheck: {test: [CMD, wget, --no-verbose, --tries=1, --spider, http://127.0.0.1/], interval: 10s, timeout: 5s, retries: 10}
+  engineering-frontend:
+    build:
+      context: ./engineering-frontend
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    depends_on: {price-api: {condition: service_healthy}}
+    healthcheck: {test: [CMD, wget, --no-verbose, --tries=1, --spider, http://127.0.0.1/engineering/], interval: 10s, timeout: 5s, retries: 10}
+  fsa-frontend:
+    build:
+      context: ./fsa/frontend
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    ports: ['8881:80']
+    depends_on: {fsa-api: {condition: service_healthy}, price-api: {condition: service_healthy}}
+    healthcheck: {test: [CMD, wget, --no-verbose, --tries=1, --spider, http://127.0.0.1/], interval: 10s, timeout: 5s, retries: 10}
+volumes: {price-db: {}, price-db-test: {}, fsa-db: {}, minio-data: {}}

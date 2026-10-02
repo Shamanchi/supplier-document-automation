@@ -1,0 +1,100 @@
+# Frontend-сборка и инструменты (npm/vite/playwright/tsc)
+node_modules
+dist
+.env
+.DS_Store
+*.local
+*.tsbuildinfo
+test-results
+playwright-report
+blob-report
+coverage
+*:Zone.Identifier
+
+.venv/
+__pycache__/
+*.py[cod]
+
+# инкрементальный кеш tsc: пересобирается локально, в git не нужен
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+**/original/
+ansible/
+price_corpus/
+certificates_passports_corpus/
+external_certificates_passports_corpus/
+external_price_corpus/
+.history/
+.multica/
+.playwright-cli/
+CLAUDE.md
+Nikolay_Stepankov/original_data/
+.claude
+Nikolay_Stepankov/eval_first_parsing/price_loader_app/reports/
+# служебные каталоги и черновики агентов
+.agent_context/
+.agents/
+.codex/
+.opencode/
+attachments/
+/description.md
+/findings.md
+/progress.md
+/task_plan.md
+/reply.md
+
+# зависимости и кэши
+node_modules/
+.pytest_cache/
+.vite/
+
+# разовые выгрузки в корне репозитория
+/*.csv
+
+# артефакты контура качества — пересобираются ./eval_first_parsing/price_eval/run.sh; эталон оставляем
+Nikolay_Stepankov/eval_first_parsing/price_eval/out/
+Nikolay_Stepankov/eval_first_parsing/price_eval/plan/
+Nikolay_Stepankov/eval_first_parsing/price_eval/transfer/
+Nikolay_Stepankov/eval_first_parsing/price_eval/rules/
+Nikolay_Stepankov/eval_first_parsing/price_eval/gpt_review/
+Nikolay_Stepankov/eval_first_parsing/price_eval/eval/**
+!Nikolay_Stepankov/eval_first_parsing/price_eval/eval/items/
+!Nikolay_Stepankov/eval_first_parsing/price_eval/eval/items/**
+!Nikolay_Stepankov/eval_first_parsing/price_eval/eval/gold_cases.json
+!Nikolay_Stepankov/eval_first_parsing/price_eval/eval/manifest.json
+
+# почтовый ящик — персональные данные, 180 МБ
+Nikolay_Stepankov/imap/mailbox/
+
+# корпус и результаты бенчмарка OCR
+Nikolay_Stepankov/ocr/benchmark/corpus/
+Nikolay_Stepankov/ocr/benchmark/results/
+
+# сравнение OCR-движков: код, спека и сводные CSV остаются в git,
+# сырой выхлоп движков (108 МБ) — нет; выводы сведены в docs/исследования_ocr/
+Nikolay_Stepankov/ocr/ocrmypdf_api_workflow/data/ocr_engine_runs/
+Nikolay_Stepankov/ocr/ocrmypdf_api_workflow/data/ocr_output_text/
+Nikolay_Stepankov/ocr/ocrmypdf_api_workflow/data/ocr_text_combined.txt
+
+# зеркало набора открытых данных Росаккредитации (крупные бинарники)
+Nikolay_Stepankov/fsa_registry_mirror/
+Nikolay_Stepankov/OCR_prices/
+Nikolay_Stepankov/.docs
+
+# локальные артефакты smoke-тестов (не в git)
+/1.png
+/login.json
+
+# Локальные каталоги окружения, IDE и файлы БД — в git не нужны
+/venv/
+/.idea/
+/.gigaide/
+/prices.db
+
+# дамп живой БД перед мержем: пользователи и заказы стенда.
+# Файл остаётся на диске как страховка, но в git не попадает.
+/backup_pre_merge_remote.sql

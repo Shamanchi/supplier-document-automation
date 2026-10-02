@@ -1,0 +1,26 @@
+.review-grid-wrap { overflow: auto; max-height: 62vh; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; }
+.review-grid { border-collapse: separate; border-spacing: 0; min-width: 100%; width: max-content; font-size: 13px; }
+.review-grid th, .review-grid td { border-right: 1px solid #e8e8e8; border-bottom: 1px solid #e8e8e8; padding: 8px; min-width: 150px; max-width: 300px; vertical-align: top; background: #fff; }
+.review-grid thead th { position: sticky; top: 0; z-index: 3; background: #f0f4f8; }
+.review-grid tbody th { position: sticky; left: 0; z-index: 2; min-width: 54px; width: 54px; text-align: right; color: #5b6b7c; background: #f7f9fb; }
+.review-grid-corner { left: 0; z-index: 4 !important; min-width: 54px !important; }
+.review-grid .review-grid-actions { position: sticky; right: 0; min-width: 92px; width: 92px; background: #f7f9fb; z-index: 2; }
+.review-grid td:focus, .review-grid td.is-active { outline: 2px solid #1677ff; outline-offset: -2px; }
+.review-grid tr.is-header td { background: #fffbe6; }
+.review-grid .is-bold { font-weight: 600; }
+.review-diff { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.review-diff-row { display: grid; grid-template-columns: 90px minmax(120px, 1fr) auto; align-items: center; gap: 8px; padding-block: 6px; border-bottom: 1px solid #f0f0f0; }
+.review-json-diagnostics { max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.review-workspace { display: grid; gap: 16px; }
+.review-action-bar { position: sticky; bottom: 0; z-index: 5; border-top: 1px solid #d9d9d9; box-shadow: 0 -6px 20px rgba(22, 50, 79, .08); }
+.review-queue-layout { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.review-queue-list { max-height: calc(100vh - 330px); overflow: auto; }
+.review-queue-item { width: 100%; text-align: left; height: auto; padding: 10px 12px; white-space: normal; }
+.review-queue-item.is-selected { border-color: #16324f; background: #eef4f8; }
+@media (max-width: 900px) {
+  .review-queue-layout { grid-template-columns: 1fr; }
+  .review-queue-list { max-height: 300px; }
+  .review-diff { grid-template-columns: 1fr; }
+  .review-grid-wrap { max-height: 55vh; }
+  .review-action-bar { position: static; }
+}

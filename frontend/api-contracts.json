@@ -1,0 +1,1380 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Пожарный КП Frontend API",
+    "version": "1.0.0",
+    "description": "Контракты API, необходимые React-приложению «Пожарный КП». Сейчас запросы обслуживаются MSW."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Базовый URL по умолчанию (настраивается через VITE_API_BASE_URL)"
+    }
+  ],
+  "tags": [
+    { "name": "Dashboard" },
+    { "name": "Orders" },
+    { "name": "Checks" },
+    { "name": "Suppliers" },
+    { "name": "Products" },
+    { "name": "Certificates" },
+    { "name": "Dictionary" },
+    { "name": "Administration" },
+    { "name": "Profile" }
+  ],
+  "paths": {
+    "/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Получить показатели дашборда",
+        "operationId": "getDashboard",
+        "responses": {
+          "200": {
+            "description": "Показатели и последние заявки",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DashboardData" }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Получить список заявок",
+        "operationId": "getOrders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "active", "closed", "archived"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Поиск по номеру, клиенту или Tender ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список заявок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OrderSummary" }
+                }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Создать заявку",
+        "operationId": "createOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateOrderRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Заявка создана",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetail" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Получить полную карточку заявки",
+        "operationId": "getOrder",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": {
+            "description": "Карточка заявки",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetail" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/orders/{orderId}/send": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Отправить заявку на обработку",
+        "operationId": "sendOrder",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/orders/{orderId}/cancel-send": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Отменить отправку заявки",
+        "operationId": "cancelOrderSend",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/orders/{orderId}/close": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Закрыть заявку и зафиксировать итоговое КП",
+        "operationId": "closeOrder",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/orders/{orderId}/archive": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Переместить заявку в архив",
+        "operationId": "archiveOrder",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/orders/{orderId}/complete-check": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Завершить проверку технических характеристик",
+        "operationId": "completeOrderCheck",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/orders/{orderId}/confirm-quote": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Подтвердить коммерческое предложение",
+        "operationId": "confirmOrderQuote",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/orders/{orderId}/parameters/{parameterId}": {
+      "patch": {
+        "tags": ["Orders"],
+        "summary": "Изменить или подтвердить параметр ТХ",
+        "operationId": "updateOrderParameter",
+        "parameters": [
+          { "$ref": "#/components/parameters/OrderId" },
+          { "$ref": "#/components/parameters/ParameterId" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "supplierValue": { "type": "string" },
+                  "confirmed": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/orders/{orderId}/quote": {
+      "patch": {
+        "tags": ["Orders"],
+        "summary": "Изменить параметры расчёта КП",
+        "operationId": "updateOrderQuote",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateQuoteRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/OrderResponse" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/orders/{orderId}/files": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Добавить документ в заявку",
+        "operationId": "uploadOrderFile",
+        "parameters": [{ "$ref": "#/components/parameters/OrderId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UploadFileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/OrderResponse" },
+          "415": {
+            "description": "Неподдерживаемый формат файла",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checks": {
+      "get": {
+        "tags": ["Checks"],
+        "summary": "Получить историю проверок",
+        "operationId": "getChecks",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "success", "warning", "danger"]
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "История проверок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CheckHistoryItem" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/suppliers": {
+      "get": {
+        "tags": ["Suppliers"],
+        "summary": "Получить поставщиков",
+        "operationId": "getSuppliers",
+        "responses": {
+          "200": {
+            "description": "Список поставщиков",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Supplier" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Suppliers"],
+        "summary": "Добавить поставщика",
+        "operationId": "createSupplier",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Поставщик создан",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Supplier" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/suppliers/{supplierId}/files": {
+      "post": {
+        "tags": ["Suppliers"],
+        "summary": "Загрузить файл поставщика",
+        "operationId": "uploadSupplierFile",
+        "parameters": [{ "$ref": "#/components/parameters/SupplierId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UploadFileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Обновлённая карточка поставщика",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Supplier" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Найти товары",
+        "operationId": "getProducts",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список товаров",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Product" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/certificates": {
+      "get": {
+        "tags": ["Certificates"],
+        "summary": "Получить сертификаты и ТХ",
+        "operationId": "getCertificates",
+        "responses": {
+          "200": {
+            "description": "Список сертификатов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Certificate" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Certificates"],
+        "summary": "Загрузить сертификат",
+        "operationId": "uploadCertificate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["supplier", "product", "number"],
+                "properties": {
+                  "supplier": { "type": "string" },
+                  "product": { "type": "string" },
+                  "number": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сертификат создан",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Certificate" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/dictionary": {
+      "get": {
+        "tags": ["Dictionary"],
+        "summary": "Получить словарь",
+        "operationId": "getDictionary",
+        "responses": {
+          "200": {
+            "description": "Номенклатура, единицы и материалы",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DictionaryData" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dictionary/synonyms": {
+      "post": {
+        "tags": ["Dictionary"],
+        "summary": "Предложить синоним",
+        "operationId": "suggestSynonym",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["canonical", "synonym"],
+                "properties": {
+                  "canonical": { "type": "string" },
+                  "synonym": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Синоним отправлен на модерацию",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "enum": ["pending"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin": {
+      "get": {
+        "tags": ["Administration"],
+        "summary": "Получить административные настройки",
+        "operationId": "getAdminData",
+        "responses": {
+          "200": {
+            "description": "Настройки, синонимы и шаблоны",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminData" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/admin/settings": {
+      "patch": {
+        "tags": ["Administration"],
+        "summary": "Изменить системные настройки",
+        "operationId": "updateAdminSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminSettings" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённые административные данные",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminData" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/admin/synonyms/{synonymId}": {
+      "patch": {
+        "tags": ["Administration"],
+        "summary": "Принять или отклонить синоним",
+        "operationId": "decideSynonym",
+        "parameters": [{ "$ref": "#/components/parameters/SynonymId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["accepted", "rejected"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённые административные данные",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminData" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Получить профиль текущего пользователя",
+        "operationId": "getProfile",
+        "responses": {
+          "200": {
+            "description": "Профиль, уведомления и права",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileData" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/role": {
+      "patch": {
+        "tags": ["Profile"],
+        "summary": "Переключить демонстрационную роль",
+        "operationId": "changeProfileRole",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "$ref": "#/components/schemas/Role" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённый профиль",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileData" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/notifications/{notificationId}": {
+      "patch": {
+        "tags": ["Profile"],
+        "summary": "Подтвердить или отклонить уведомление",
+        "operationId": "decideNotification",
+        "parameters": [{ "$ref": "#/components/parameters/NotificationId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["approved", "rejected"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённый профиль",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileData" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/profile/permissions": {
+      "patch": {
+        "tags": ["Profile"],
+        "summary": "Изменить права выбранной роли",
+        "operationId": "updateRolePermissions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role", "permissions"],
+                "properties": {
+                  "role": { "$ref": "#/components/schemas/Role" },
+                  "permissions": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённый профиль",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileData" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "OrderId": {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "ParameterId": {
+        "name": "parameterId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "SupplierId": {
+        "name": "supplierId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "SynonymId": {
+        "name": "synonymId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "NotificationId": {
+        "name": "notificationId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "OrderResponse": {
+        "description": "Обновлённая карточка заявки",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/OrderDetail" }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Ошибка валидации",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Недостаточно прав",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Ресурс не найден",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Операция невозможна в текущем статусе",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Внутренняя ошибка",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "code": { "type": "string" },
+          "details": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "Role": {
+        "type": "string",
+        "enum": ["admin", "manager", "sysadmin"]
+      },
+      "OrderStatus": {
+        "type": "string",
+        "enum": ["draft", "active", "confirmation", "closed", "archived"]
+      },
+      "VerdictStatus": {
+        "type": "string",
+        "enum": ["success", "warning", "danger", "missing"]
+      },
+      "Kpi": {
+        "type": "object",
+        "required": ["id", "label", "value", "detail", "tone"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "value": { "type": "number" },
+          "detail": { "type": "string" },
+          "tone": {
+            "type": "string",
+            "enum": ["success", "warning", "default"]
+          }
+        }
+      },
+      "DashboardData": {
+        "type": "object",
+        "required": ["kpis", "latestOrders"],
+        "properties": {
+          "kpis": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Kpi" }
+          },
+          "latestOrders": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderSummary" }
+          }
+        }
+      },
+      "OrderSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "client",
+          "source",
+          "priority",
+          "status",
+          "statusLabel",
+          "progress",
+          "date"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "number": { "type": "string", "example": "З-00142" },
+          "client": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["bitrix", "manual", "email"]
+          },
+          "tenderId": { "type": "string", "nullable": true },
+          "priority": {
+            "type": "string",
+            "enum": ["High", "Medium", "Low"]
+          },
+          "status": { "$ref": "#/components/schemas/OrderStatus" },
+          "statusLabel": { "type": "string" },
+          "progress": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "date": { "type": "string" }
+        }
+      },
+      "CreateOrderRequest": {
+        "type": "object",
+        "required": ["client", "source", "priority"],
+        "properties": {
+          "client": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["bitrix", "manual", "email"]
+          },
+          "tenderId": { "type": "string" },
+          "priority": {
+            "type": "string",
+            "enum": ["High", "Medium", "Low"]
+          }
+        }
+      },
+      "OrderFile": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "version",
+          "date",
+          "progress",
+          "status"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["specification", "passport", "price", "other"]
+          },
+          "version": { "type": "string" },
+          "date": { "type": "string" },
+          "progress": { "type": "integer" },
+          "status": {
+            "type": "string",
+            "enum": ["processed", "warning", "pending"]
+          },
+          "rawRows": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": { "type": "string" } }
+          },
+          "mappedRows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "value": { "type": "string" },
+                "status": { "$ref": "#/components/schemas/VerdictStatus" }
+              }
+            }
+          }
+        }
+      },
+      "TechParameter": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "requirement",
+          "supplierValue",
+          "result",
+          "resultLabel",
+          "source",
+          "confidence",
+          "confirmed"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "requirement": { "type": "string" },
+          "supplierValue": { "type": "string" },
+          "result": { "$ref": "#/components/schemas/VerdictStatus" },
+          "resultLabel": { "type": "string" },
+          "source": { "type": "string" },
+          "confidence": { "type": "number" },
+          "confirmed": { "type": "boolean" }
+        }
+      },
+      "PricePosition": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "product": { "type": "string" },
+          "unit": { "type": "string" },
+          "supplier": { "type": "string" },
+          "price": { "type": "number" },
+          "discount": { "type": "number" },
+          "method": { "type": "string", "enum": ["auto", "manual"] },
+          "status": { "$ref": "#/components/schemas/VerdictStatus" },
+          "source": { "type": "string" },
+          "selected": { "type": "boolean" }
+        }
+      },
+      "QuotePosition": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "product": { "type": "string" },
+          "quantity": { "type": "number" },
+          "unit": { "type": "string" },
+          "supplier": { "type": "string" },
+          "price": { "type": "number" },
+          "discount": { "type": "number" },
+          "subtotal": { "type": "number" },
+          "vat": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "OrderVersion": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "string" },
+          "date": { "type": "string" },
+          "author": { "type": "string" },
+          "amount": { "type": "number" },
+          "status": {
+            "type": "string",
+            "enum": ["confirmed", "draft", "cancelled"]
+          },
+          "final": { "type": "boolean" }
+        }
+      },
+      "OrderDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/OrderSummary" },
+          {
+            "type": "object",
+            "required": [
+              "createdBy",
+              "importedAt",
+              "calculationVersion",
+              "lifecycle",
+              "currentLifecycle",
+              "sent",
+              "readOnly",
+              "files",
+              "techParameters",
+              "pricePositions",
+              "quotePositions",
+              "vatRate",
+              "automaticDiscount",
+              "specialDiscount",
+              "discountApproval",
+              "supplierTotals",
+              "versions",
+              "auditLog"
+            ],
+            "properties": {
+              "createdBy": { "type": "string" },
+              "importedAt": { "type": "string" },
+              "calculationVersion": { "type": "string" },
+              "lifecycle": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "currentLifecycle": { "type": "integer" },
+              "sent": { "type": "boolean" },
+              "readOnly": { "type": "boolean" },
+              "files": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OrderFile" }
+              },
+              "techParameters": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/TechParameter" }
+              },
+              "pricePositions": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/PricePosition" }
+              },
+              "quotePositions": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/QuotePosition" }
+              },
+              "vatRate": { "type": "number" },
+              "automaticDiscount": { "type": "number" },
+              "specialDiscount": { "type": "number" },
+              "discountApproval": {
+                "type": "string",
+                "enum": ["pending", "approved", "rejected"]
+              },
+              "supplierTotals": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "supplier": { "type": "string" },
+                    "amount": { "type": "number" },
+                    "weight": { "type": "string" },
+                    "volume": { "type": "string" }
+                  }
+                }
+              },
+              "versions": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OrderVersion" }
+              },
+              "auditLog": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": { "type": "string" },
+                    "user": { "type": "string" },
+                    "action": { "type": "string" },
+                    "value": { "type": "string" },
+                    "reason": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "UpdateQuoteRequest": {
+        "type": "object",
+        "properties": {
+          "vatRate": { "type": "number", "minimum": 0, "maximum": 100 },
+          "specialDiscount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "supplierId": { "type": "string" },
+          "reason": { "type": "string" }
+        },
+        "description": "Для ручного изменения vatRate или specialDiscount поле reason обязательно."
+      },
+      "UploadFileRequest": {
+        "type": "object",
+        "required": ["fileName", "kind"],
+        "properties": {
+          "fileName": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["specification", "passport", "price", "other"]
+          }
+        }
+      },
+      "CheckHistoryItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "date": { "type": "string" },
+          "tenderId": { "type": "string" },
+          "client": { "type": "string" },
+          "equipment": { "type": "string" },
+          "tool": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["success", "warning", "danger"]
+          },
+          "statusLabel": { "type": "string" },
+          "parameters": { "type": "string" }
+        }
+      },
+      "Supplier": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "products",
+          "files",
+          "pricing",
+          "discountRules",
+          "certificates"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "products": { "type": "array", "items": { "type": "string" } },
+          "files": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderFile" }
+          },
+          "pricing": {
+            "type": "object",
+            "properties": {
+              "product": { "type": "string" },
+              "purchasePrice": { "type": "number" },
+              "retailPrice": { "type": "number" },
+              "categoryDiscount": { "type": "number" },
+              "markup": { "type": "number" },
+              "priceUploadedAt": { "type": "string" },
+              "certificateUpdatedAt": { "type": "string" }
+            }
+          },
+          "discountRules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "type": { "type": "string" },
+                "percent": { "type": "number" },
+                "condition": { "type": "string" },
+                "active": { "type": "boolean" }
+              }
+            }
+          },
+          "certificates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "number": { "type": "string" },
+                "type": { "type": "string" },
+                "status": { "type": "string", "enum": ["active", "expired"] },
+                "validUntil": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "specifications": { "type": "string" },
+          "unit": { "type": "string" },
+          "supplier": { "type": "string" },
+          "documentType": { "type": "string" }
+        }
+      },
+      "Certificate": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "supplier": { "type": "string" },
+          "product": { "type": "string" },
+          "number": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "expired"] },
+          "validUntil": { "type": "string" },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "value": { "type": "string" },
+                "document": { "type": "string" },
+                "page": { "type": "string" },
+                "quote": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "DictionaryData": {
+        "type": "object",
+        "properties": {
+          "nomenclature": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "canonical": { "type": "string" },
+                "clientSynonyms": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "supplierNames": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "approvedSynonyms": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "unit": { "type": "string" },
+                "category": { "type": "string" },
+                "coefficient": { "type": "number" },
+                "baseUnit": { "type": "string" },
+                "example": { "type": "string" }
+              }
+            }
+          },
+          "materials": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          }
+        }
+      },
+      "AdminSettings": {
+        "type": "object",
+        "required": ["vatRate", "confidenceHigh", "confidenceMedium"],
+        "properties": {
+          "vatRate": { "type": "number" },
+          "confidenceHigh": { "type": "number" },
+          "confidenceMedium": { "type": "number" }
+        }
+      },
+      "AdminData": {
+        "type": "object",
+        "properties": {
+          "settings": { "$ref": "#/components/schemas/AdminSettings" },
+          "synonyms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "synonym": { "type": "string" },
+                "canonical": { "type": "string" },
+                "author": { "type": "string" },
+                "similarity": { "type": "number" },
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "accepted", "rejected"]
+                }
+              }
+            }
+          },
+          "templates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "equipment": { "type": "string" },
+                "parameters": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProfileData": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "initials": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/Role" },
+          "notifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "orderId": { "type": "string" },
+                "title": { "type": "string" },
+                "createdAt": { "type": "string" },
+                "type": { "type": "string", "enum": ["discount", "vat"] },
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "approved", "rejected"]
+                }
+              }
+            }
+          },
+          "permissions": {
+            "type": "object",
+            "required": ["admin", "manager", "sysadmin"],
+            "properties": {
+              "admin": { "type": "array", "items": { "type": "string" } },
+              "manager": { "type": "array", "items": { "type": "string" } },
+              "sysadmin": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }]
+}

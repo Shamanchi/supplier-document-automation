@@ -1,0 +1,137 @@
+[
+ {
+  "supplier_code": "rusarsenal",
+  "supplier_name": "НПО «Supplier B»",
+  "project_slug": null,
+  "name": "Supplier B — двупанельный XLS и матрица гидрантов",
+  "loader": "xls",
+  "header_hash": "builtin-rusarsenal-двупанельный-xls",
+  "fingerprint": {
+   "source": "builtin_profile_migrated_from_code"
+  },
+  "recipe": {
+   "format": "workbook_layout_v1",
+   "name": "Supplier B — двупанельный XLS и матрица гидрантов",
+   "match": {
+    "required_sheet_names": [
+     "Рукав ПТ",
+     "Огнетушители ОУ,ОП",
+     "Подст.под Гидранты",
+     "Оборуд.Обслуж.Знаки"
+    ],
+    "minimum_standard_panels": 8
+   },
+   "standard": {
+    "panels": [
+     {
+      "name": 0,
+      "unit": 1,
+      "price": 2
+     },
+     {
+      "name": 4,
+      "unit": 5,
+      "price": 6
+     }
+    ]
+   },
+   "wide": [
+    {
+     "sheets": [
+      "Краны,Клапан",
+      "Шкафы"
+     ],
+     "panels": [
+      {
+       "name": 0,
+       "unit": 13,
+       "price": 14,
+       "inherit_blank_name": true
+      },
+      {
+       "name": 0,
+       "unit": 6,
+       "price": 7
+      },
+      {
+       "name": 10,
+       "unit": 17,
+       "price": 18
+      }
+     ]
+    },
+    {
+     "sheets": [
+      "Щиты,Стенды"
+     ],
+     "panels": [
+      {
+       "name": 0,
+       "unit": 13,
+       "price": 14
+      },
+      {
+       "name": 0,
+       "unit": 8,
+       "price": 9
+      },
+      {
+       "name": 12,
+       "unit": 17,
+       "price": 18
+      }
+     ]
+    },
+    {
+     "sheets": [
+      "Оборуд.Обслуж.Знаки"
+     ],
+     "panels": [
+      {
+       "name": 0,
+       "unit": 16,
+       "price": 17
+      },
+      {
+       "name": 0,
+       "unit": 8,
+       "price": 9
+      }
+     ]
+    }
+   ],
+   "matrix": {
+    "sheet": "Подст.под Гидранты",
+    "name": 2,
+    "unit": 6,
+    "outlet": 9,
+    "price_columns": [
+     4,
+     5,
+     6,
+     11,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     21,
+     23
+    ],
+    "simple_panel": {
+     "name": 2,
+     "unit": 9,
+     "price": 10
+    }
+   }
+  },
+  "revision": 1,
+  "status": "active",
+  "provenance": "manual",
+  "validation": {
+   "passed": true,
+   "note": "перенесён из константы workbook_layout.py без изменений"
+  }
+ }
+]

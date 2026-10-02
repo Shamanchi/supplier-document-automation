@@ -1,0 +1,30 @@
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    client_max_body_size 100m;
+
+    # resolver + переменная: nginx перечитывает DNS backend'а, а не кэширует IP
+    # на старте — иначе после пересборки backend-контейнера ловим 502.
+    #
+    # Имя апстрима подставляется на старте: в единой выкладке сервис называется
+    # price-backend, в отдельном compose контура — backend.
+    resolver 127.0.0.11 valid=10s;
+
+    location /api/ {
+        set $backend_upstream http://${BACKEND_UPSTREAM};
+        proxy_pass $backend_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    location /engineering/ {
+        try_files $uri $uri/ /engineering/index.html;
+    }
+}
